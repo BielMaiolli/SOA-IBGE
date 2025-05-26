@@ -1,103 +1,174 @@
-<<<<<<< HEAD
-# SOA-IBGE
-Atividade prática em grupo.
-=======
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+Sistema SOA - Análise de Nomes Brasil 📊
+Este projeto implementa um sistema baseado na arquitetura SOA (Service-Oriented Architecture) para análise de dados de nomes brasileiros utilizando a API do IBGE. O sistema permite consultar a evolução de nomes ao longo das décadas, comparar nomes e visualizar rankings por localidade.
+🏗️ Arquitetura SOA Implementada
+1. Separação em Serviços
+O projeto está estruturado em serviços independentes e reutilizáveis:
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+IbgeService (ibge.service.ts): Responsável pela comunicação com a API externa do IBGE
+CacheService (cache.service.ts): Gerencia o cache de dados no MongoDB
+NamesService (implícito): Orquestra a lógica de negócio para análise de nomes
+AppService (app.service.ts): Serviço principal da aplicação
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+2. Baixo Acoplamento
+Os serviços são independentes e comunicam-se através de interfaces bem definidas:
+typescript// IbgeService é injetado onde necessário, mas mantém independência
+@Injectable()
+export class IbgeService {
+  async getNameEvolution(name: string, localidade?: string): Promise<any>
+  async getTopNamesInLocation(localidade: string): Promise<any>
+}
+3. Reusabilidade
+Os serviços podem ser reutilizados em diferentes contextos:
 
-## Description
+IbgeService: Pode ser usado por qualquer módulo que precise de dados do IBGE
+CacheService: Serviço genérico de cache, reutilizável para qualquer tipo de dado
+Módulos exportáveis: Através do padrão de módulos do NestJS
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+4. Interoperabilidade
+O sistema se comunica com serviços externos através de APIs REST:
 
-## Project setup
+API do IBGE: https://servicodados.ibge.gov.br/api/v2/censos/nomes
+Interface HTTP: O frontend consome a API através de endpoints REST
+Formato JSON: Dados padronizados para comunicação entre serviços
 
-```bash
-$ npm install
-```
+5. Abstração de Serviços
+Cada serviço encapsula sua funcionalidade específica:
+typescript// Abstração do cache
+export class CacheService {
+  async get(key: string): Promise<any>
+  async set(key: string, data: any, localidade?: string): Promise<void>
+}
 
-## Compile and run the project
+// Abstração da API do IBGE
+export class IbgeService {
+  private readonly baseUrl = 'https://servicodados.ibge.gov.br/api/v2/censos/nomes'
+  // Métodos abstraem a complexidade da API externa
+}
+6. Governança de Serviços
+Implementação de padrões e validações:
 
-```bash
-# development
-$ npm run start
+DTOs para validação de entrada:
 
-# watch mode
-$ npm run start:dev
+CompareNamesDto: Validação para comparação de nomes
+LocationNamesDto: Validação para consultas por localidade
+NameEvolutionDto: Validação para evolução de nomes
 
-# production mode
-$ npm run start:prod
-```
 
-## Run tests
+Tratamento de erros padronizado:
 
-```bash
-# unit tests
-$ npm run test
+typescriptcatch (error) {
+  throw new HttpException(
+    'Erro ao consultar API do IBGE',
+    HttpStatus.SERVICE_UNAVAILABLE
+  );
+}
+🚀 Tecnologias Utilizadas
 
-# e2e tests
-$ npm run test:e2e
+Backend: NestJS (Framework Node.js)
+Frontend: HTML5, CSS3, JavaScript (Vanilla)
+Banco de Dados: MongoDB com Mongoose
+Visualização: Chart.js
+Validação: class-validator
+API Externa: IBGE - Serviço de Dados
 
-# test coverage
-$ npm run test:cov
-```
+📋 Funcionalidades
+1. Evolução do Nome 📈
 
-## Deployment
+Consulta a frequência de um nome ao longo das décadas
+Filtros por período (década inicial e final)
+Visualização em gráfico de linha
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+2. Nomes por Localidade 🗺️
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Top 3 nomes mais frequentes por estado brasileiro
+Ranking com medalhas (🥇🥈🥉)
+Apresentação em tabela
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+3. Comparação de Nomes ⚖️
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Comparação lado a lado de dois nomes
+Visualização comparativa em gráfico
+Análise de tendências
 
-## Resources
+🛠️ Instalação e Execução
+Pré-requisitos
 
-Check out a few resources that may come in handy when working with NestJS:
+Node.js (versão 16 ou superior)
+MongoDB
+npm ou yarn
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Passos para execução
 
-## Support
+Clone o repositório
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+bashgit clone [seu-repositório]
+cd nome-trends-soa
 
-## Stay in touch
+Instale as dependências
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+bashnpm install
 
-## License
+Configure o MongoDB
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
->>>>>>> 0fd3699 (Projeto ficou massa professor Biazotto)
+bash# Certifique-se de que o MongoDB esteja rodando em localhost:27017
+# O banco 'nome-trends' será criado automaticamente
+
+Execute a aplicação
+
+bashnpm run start:dev
+
+Acesse o sistema
+
+http://localhost:3000
+🏛️ Estrutura do Projeto
+src/
+├── app.controller.ts          # Controller principal
+├── app.module.ts             # Módulo principal da aplicação
+├── app.service.ts            # Serviço principal
+├── main.ts                   # Ponto de entrada da aplicação
+├── cache/                    # Módulo de cache
+│   ├── cache.module.ts
+│   ├── cache.service.ts
+│   └── schemas/
+│       └── name-data.schema.ts
+├── ibge/                     # Módulo de integração com IBGE
+│   ├── ibge.module.ts
+│   └── ibge.service.ts
+├── names/                    # Módulo de nomes (DTOs)
+│   ├── dto/
+│   │   ├── compare-names.dto.ts
+│   │   ├── location-names.dto.ts
+│   │   └── name-evolution.dto.ts
+└── frontend/                 # Interface web
+    ├── index.html
+    ├── script.js
+    └── styles.css
+🔧 Benefícios da Arquitetura SOA Aplicada
+1. Manutenibilidade
+
+Cada serviço pode ser modificado independentemente
+Códigos organizados por responsabilidade
+
+2. Escalabilidade
+
+Serviços podem ser escalados individualmente
+Cache reduz chamadas à API externa
+
+3. Testabilidade
+
+Serviços podem ser testados isoladamente
+Mocks podem ser facilmente implementados
+
+4. Flexibilidade
+
+Fácil adição de novos serviços
+Integração com outras APIs possível
+
+5. Reutilização
+
+Serviços podem ser usados em outros projetos
+Lógica de negócio centralizada
+
+🎯 Conclusão
+Este projeto demonstra uma implementação prática dos princípios SOA em uma aplicação web moderna. A separação clara de responsabilidades, o baixo acoplamento entre serviços e a padronização de interfaces garantem um sistema robusto, escalável e de fácil manutenção.
+A utilização do NestJS facilita a implementação dos padrões SOA através de seu sistema de módulos, injeção de dependência e decorators, proporcionando uma base sólida para o desenvolvimento de aplicações empresariais.
