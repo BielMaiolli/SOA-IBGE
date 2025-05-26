@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema SOA - Análise de Nomes Brasil</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .row {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Sistema SOA - Análise de Nomes Brasil</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('evolution')">Evolução do Nome</div>
+            <div class="tab" onclick="showTab('location')">Nomes por Localidade</div>
+            <div class="tab" onclick="showTab('compare')">Comparar Nomes</div>
+        </div>
+
+        <!-- Tab 1: Evolução do Nome -->
+        <div id="evolution" class="tab-content active">
+            <h3>📈 Evolução do Ranking de um Nome</h3>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="evolutionName">Nome:</label>
+                        <input type="text" id="evolutionName" placeholder="Ex: Maria, João" required>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="startDecade">Década Inicial (opcional):</label>
+                        <select id="startDecade">
+                            <option value="">Todas</option>
+                            <option value="1930">1930</option>
+                            <option value="1940">1940</option>
+                            <option value="1950">1950</option>
+                            <option value="1960">1960</option>
+                            <option value="1970">1970</option>
+                            <option value="1980">1980</option>
+                            <option value="1990">1990</option>
+                            <option value="2000">2000</option>
+                            <option value="2010">2010</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="endDecade">Década Final (opcional):</label>
+                        <select id="endDecade">
+                            <option value="">Todas</option>
+                            <option value="1940">1940</option>
+                            <option value="1950">1950</option>
+                            <option value="1960">1960</option>
+                            <option value="1970">1970</option>
+                            <option value="1980">1980</option>
+                            <option value="1990">1990</option>
+                            <option value="2000">2000</option>
+                            <option value="2010">2010</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button onclick="searchEvolution()">Buscar Evolução</button>
+            <div class="loading" id="evolutionLoading">Carregando dados...</div>
+            <div id="evolutionResults" class="results" style="display: none;">
+                <div class="chart-container">
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Nomes por Localidade -->
+        <div id="location" class="tab-content">
+            <h3>🗺️ Top 3 Nomes por Localidade</h3>
+            <div class="form-group">
+                <label for="locationSelect">Localidade (UF):</label>
+                <select id="locationSelect" required>
+                    <option value="">Selecione um estado</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                </select>
+            </div>
+            <button onclick="searchLocation()">Buscar Top 3</button>
+            <div class="loading" id="locationLoading">Carregando dados...</div>
+            <div id="locationResults" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Tab 3: Comparar Nomes -->
+        <div id="compare" class="tab-content">
+            <h3>⚖️ Comparação de Dois Nomes</h3>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="name1">Primeiro Nome:</label>
+                        <input type="text" id="name1" placeholder="Ex: Ana" required>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="name2">Segundo Nome:</label>
+                        <input type="text" id="name2" placeholder="Ex: Maria" required>
+                    </div>
+                </div>
+            </div>
+            <button onclick="compareNames()">Comparar Nomes</button>
+            <div class="loading" id="compareLoading">Carregando dados...</div>
+            <div id="compareResults" class="results" style="display: none;">
+                <div class="chart-container">
+                    <canvas id="compareChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentChart = null;
+
+        function showTab(tabName) {
+            // Remove active from all tabs and contents
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active to clicked tab and corresponding content
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function showLoading(elementId) {
+            document.getElementById(elementId).classList.add('show');
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).classList.remove('show');
+        }
+
+        function showError(message, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="error">❌ ${message}</div>`;
+            container.style.display = 'block';
+        }
+
+        async function searchEvolution() {
+            const name = document.getElementById('evolutionName').value.trim();
+            const startDecade = document.getElementById('startDecade').value;
+            const endDecade = document.getElementById('endDecade').value;
+
+            if (!name) {
+                alert('Por favor, digite um nome');
+                return;
+            }
+
+            showLoading('evolutionLoading');
+            document.getElementById('evolutionResults').style.display = 'none';
+
+            try {
+                let url = `/api/name-evolution?name=${encodeURIComponent(name)}`;
+                if (startDecade) url += `&startDecade=${startDecade}`;
+                if (endDecade) url += `&endDecade=${endDecade}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                hideLoading('evolutionLoading');
+
+                if (data && data[0] && data[0].res) {
+                    displayEvolutionChart(data[0], name);
+                } else {
+                    showError('Nenhum dado encontrado para este nome', 'evolutionResults');
+                }
+            } catch (error) {
+                hideLoading('evolutionLoading');
+                showError('Erro ao buscar dados. Tente novamente.', 'evolutionResults');
+            }
+        }
+
+        function displayEvolutionChart(data, name) {
+            const results = document.getElementById('evolutionResults');
+            results.style.display = 'block';
+
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+            
+            const decades = data.res.map(item => item.periodo + 's');
+            const frequencies = data.res.map(item => item.frequencia);
+
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: decades,
+                    datasets: [{
+                        label: `Frequência do nome "${name}"`,
+                        data: frequencies,
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Evolução do nome "${name}" ao longo das décadas`
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Frequência'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Décadas'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function searchLocation() {
+            const location = document.getElementById('locationSelect').value;
+
+            if (!location) {
+                alert('Por favor, selecione uma localidade');
+                return;
+            }
+
+            showLoading('locationLoading');
+            document.getElementById('locationResults').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/location-names?localidade=${location}`);
+                const data = await response.json();
+
+                hideLoading('locationLoading');
+
+                if (data && data.length > 0) {
+                    displayLocationTable(data, location);
+                } else {
+                    showError('Nenhum dado encontrado para esta localidade', 'locationResults');
+                }
+            } catch (error) {
+                hideLoading('locationLoading');
+                showError('Erro ao buscar dados. Tente novamente.', 'locationResults');
+            }
+        }
+
+        function displayLocationTable(data, location) {
+            const results = document.getElementById('locationResults');
+            
+            let tableHtml = `
+                <h4>🏆 Top 3 nomes mais frequentes em ${location}</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Nome</th>
+                            <th>Frequência</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach((item, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                tableHtml += `
+                    <tr>
+                        <td>${medal} ${index + 1}º</td>
+                        <td>${item.nome}</td>
+                        <td>${item.frequencia.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody></table>';
+            results.innerHTML = tableHtml;
+            results.style.display = 'block';
+        }
+
+        async function compareNames() {
+            const name1 = document.getElementById('name1').value.trim();
+            const name2 = document.getElementById('name2').value.trim();
+
+            if (!name1 || !name2) {
+                alert('Por favor, digite ambos os nomes');
+                return;
+            }
+
+            showLoading('compareLoading');
+            document.getElementById('compareResults').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/compare-names?name1=${encodeURIComponent(name1)}&name2=${encodeURIComponent(name2)}`);
+                const data = await response.json();
+
+                hideLoading('compareLoading');
+
+                if (data.name1.data[0] && data.name2.data[0]) {
+                    displayCompareChart(data);
+                } else {
+                    showError('Dados insuficientes para comparação', 'compareResults');
+                }
+            } catch (error) {
+                hideLoading('compareLoading');
+                showError('Erro ao buscar dados. Tente novamente.', 'compareResults');
+            }
+        }
+
+        function displayCompareChart(data) {
+            const results = document.getElementById('compareResults');
+            results.style.display = 'block';
+
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const ctx = document.getElementById('compareChart').getContext('2d');
+            
+            // Processar dados do primeiro nome
+            const data1 = data.name1.data[0].res || [];
+            const data2 = data.name2.data[0].res || [];
+            
+            // Criar conjunto de todas as décadas
+            const allDecades = [...new Set([
+                ...data1.map(item => item.periodo),
+                ...data2.map(item => item.periodo)
+            ])].sort();
+
+            const decades = allDecades.map(d => d + 's');
+            
+            // Mapear frequências para cada década
+            const freq1 = allDecades.map(decade => {
+                const found = data1.find(item => item.periodo === decade);
+                return found ? found.frequencia : 0;
+            });
+            
+            const freq2 = allDecades.map(decade => {
+                const found = data2.find(item => item.periodo === decade);
+                return found ? found.frequencia : 0;
+            });
+
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: decades,
+                    datasets: [{
+                        label: data.name1.name,
+                        data: freq1,
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4
+                    }, {
+                        label: data.name2.name,
+                        data: freq2,
+                        borderColor: 'rgb(118, 75, 162)',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Comparação: ${data.name1.name} vs ${data.name2.name}`
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Frequência'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Décadas'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Permitir busca com Enter
+        document.getElementById('evolutionName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchEvolution();
+        });
+
+        document.getElementById('name1').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') compareNames();
+        });
+
+        document.getElementById('name2').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') compareNames();
+        });
+    </script>
+</body>
+</html>
