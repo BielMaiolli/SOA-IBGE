@@ -241,3 +241,10 @@ src/
 Este projeto demonstra uma implementação prática dos princípios SOA em uma aplicação web moderna. A separação clara de responsabilidades, o baixo acoplamento entre serviços e a padronização de interfaces garantem um sistema robusto, escalável e de fácil manutenção.
 
 A utilização do NestJS facilita a implementação dos padrões SOA através de seu sistema de módulos, injeção de dependência e decorators, proporcionando uma base sólida para o desenvolvimento de aplicações empresariais.
+
+---
+
+Gabriel Vinicius Maiolli, RA: 22120200-2;
+Bruno Batista Carrião Moreno, RA: 24284115-2;
+Renan Geraldini Leão, RA: 22259135-2;
+
